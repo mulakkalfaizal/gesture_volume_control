@@ -3,14 +3,18 @@ import time
 import numpy as np
 import handTrackingModule as htm
 import math
+import osascript
 
 wCam, hCam = 640, 480
 cap = cv2.VideoCapture(0)
-cap.set(3, wCam)
-cap.set(4, hCam)
+# cap.set(3, wCam)
+# cap.set(4, hCam)
 
 pTime = 0
 cTime = 0
+
+minVol = 0
+maxVol = 100
 
 detector = htm.handDetector(detectionCon=0.7)
 
@@ -38,7 +42,12 @@ while True:
 
         # Find the length of the line (tip of both the fingers)
         length = math.hypot(x2 - x1, y2 - y1)
-        print(f"Length: {length}")
+        #print(f"Length: {length}")
+
+        vol = np.interp(length, [50, 150], [minVol, maxVol])
+        print(f"Length: {length} => Volume converted : {vol}")
+
+        osascript.osascript(f"set volume output volume {vol}")
 
         if length < 50:
             cv2.circle(img, (cx, cy), 15, (0, 255, 0), cv2.FILLED)
