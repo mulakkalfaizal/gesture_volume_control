@@ -16,6 +16,10 @@ cTime = 0
 minVol = 0
 maxVol = 100
 
+vol = 0
+volBar = 400
+volPer = 0
+
 detector = htm.handDetector(detectionCon=0.7)
 
 while True:
@@ -44,18 +48,43 @@ while True:
         length = math.hypot(x2 - x1, y2 - y1)
         #print(f"Length: {length}")
 
+        # Convert the length between finger tip proportional to the laptop volume value [0, 100]
         vol = np.interp(length, [50, 150], [minVol, maxVol])
         print(f"Length: {length} => Volume converted : {vol}")
 
+        # Convert the length between finger tip proportional to the volume bar rectangle spec
+        volBar = np.interp(length, [50, 150], [400, 150])
+
+        # Convert teh length between finger tip to percentage
+        volPer = np.interp(length, [50, 150], [0, 100])
+
+        # Change the volume of the laptop with osascript
         osascript.osascript(f"set volume output volume {vol}")
 
         if length < 50:
             cv2.circle(img, (cx, cy), 15, (0, 255, 0), cv2.FILLED)
+    """
+    Draw the volume control bar
+    (50, 150) represents the top left corner of rectangle
+    (85, 400) represents the bottom right corner of rectangle
+    """
+    cv2.rectangle(img, (50, 150), (85, 400), (255, 0, 0), 3)
 
+    """
+    Draw the volume bar inside the above rectangle
+    (50, int(volBar) represent how much the rectangle should go up 
+    (85, 400) is the same as the outer rectangle which we draw before
+    """
+    cv2.rectangle(img, (50, int(volBar)), (85, 400), (255, 0, 0), cv2.FILLED)
+
+    # show the volume percentage near the volume bar (40, 450) is the coordinates where text should be shown
+    cv2.putText(img, f"{int(volPer)} %", (40, 450), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
+
+    # Add the frame per second to the vedio
     cTime = time.time()
     fps = 1 / (cTime - pTime)
     pTime = cTime
     cv2.putText(img, str(int(fps)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3,
-                (255, 0, 255), 3)
+                (255, 0, 0), 3)
     cv2.imshow("Image", img)
     cv2.waitKey(1)
